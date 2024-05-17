@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Neighborhood Compatability</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background: url('background.jpg') no-repeat center center fixed;
+            background-size: cover;
+            color: #fff;
+        }
+        .container {
+            max-width: 800px;
+            margin: auto;
+            padding: 20px;
+            background-color: rgba(0, 0, 0, 0.7);
+            border-radius: 10px;
+        }
+        .message-container {
+            overflow-y: auto;
+            max-height: 500px;
+            padding: 10px;
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            color: #fff;
+            line-height: 1.6;
+        }
+        .neighborhood {
+            margin-bottom: 15px;
+        }
+        .neighborhood-name {
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Conversation Log Output</h1>
+        <div class="message-container" id="outputContainer"></div>
+    </div>
+
+    <script>
+        // Function to display the API response in the output container
+        function displayResponse(response) {
+            const outputContainer = document.getElementById("outputContainer");
+            const messageDiv = document.createElement("div");
+            messageDiv.classList.add("message");
+            messageDiv.innerHTML = formatResponse(response);
+            outputContainer.appendChild(messageDiv);
+        }
+
+        // Function to format the response
+        function formatResponse(response) {
+            const formattedResponse = response
+                .replace(/1\. (.+?) -/g, '<div class="neighborhood"><span class="neighborhood-name">1. $1</span> -')
+                .replace(/2\. (.+?) -/g, '<div class="neighborhood"><span class="neighborhood-name">2. $1</span> -')
+                .replace(/3\. (.+?) -/g, '<div class="neighborhood"><span class="neighborhood-name">3. $1</span> -')
+                .replace(/\n/g, '</div>');
+            return formattedResponse + '</div>';  // Close the last div
+        }
+
+        // Check if the URL has a query parameter and display the response
+        window.onload = function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const response = urlParams.get('response');
+            if (response) {
+                const responseObject = JSON.parse(decodeURIComponent(response));
+                const output = responseObject.outputs ? responseObject.outputs['out-0'] : 'No output available';
+                displayResponse(output);
+            }
+        };
+    </script>
+</body>
+</html>
