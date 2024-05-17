@@ -110,16 +110,24 @@
         };
 
         async function query(data, url, token) {
-            const response = await fetch(url, {
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json'
-                },
-                method: "POST",
-                body: JSON.stringify(data),
-            });
-            const result = await response.json();
-            return result;
+            try {
+                const response = await fetch(url, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    method: "POST",
+                    body: JSON.stringify(data),
+                });
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const result = await response.json();
+                return result;
+            } catch (error) {
+                console.error("Error during API call:", error);
+                return { outputs: { 'out-0': 'Error during API call' } };
+            }
         }
 
         const messageContainer = document.getElementById("messageContainer");
@@ -172,14 +180,14 @@
                 "in-0": logMessages,
                 "user_id": "<USER or Conversation ID>"
             }, "https://api.stack-ai.com/inference/v0/run/ac522f2a-ccb2-4608-8bab-3e1ccf74af42/663905242c2e38e8a381736b", "f39536ea-6cd4-4afe-ac99-bd9babd2cd21");
-            console.log(firstApiResponse); // Log the response from the first API
+            console.log("First API Response:", firstApiResponse); // Log the response from the first API
 
             // Send the response from the first API to the second API
             const secondApiResponse = await query({
                 "in-0": firstApiResponse.outputs['out-0'],
                 "user_id": "<USER or Conversation ID>"
             }, "https://api.stack-ai.com/inference/v0/run/ac522f2a-ccb2-4608-8bab-3e1ccf74af42/663b8b5178d943c1cd118d55", "f39536ea-6cd4-4afe-ac99-bd9babd2cd21");
-            console.log(secondApiResponse); // Log the response from the second API
+            console.log("Second API Response:", secondApiResponse); // Log the response from the second API
 
             const responseString = JSON.stringify(secondApiResponse);
             // Redirect to the output page with the API response
