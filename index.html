@@ -93,6 +93,14 @@
         input[type="button"]:hover {
             background-color: #33a8a0;
         }
+        .response-container {
+            margin-top: 20px;
+            padding: 20px;
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            color: #fff;
+            line-height: 1.6;
+        }
     </style>
 </head>
 <body>
@@ -102,37 +110,51 @@
         <input type="text" id="userInput" placeholder="Type your message...">
         <input type="button" value="Send Message" onclick="sendMessage()">
         <input type="button" value="I'm Ready to Find My Neighborhood Match" onclick="sendConversationLog()">
+        <div class="response-container" id="responseContainer"></div>
     </div>
 
     <script>
         window.onload = function() {
             document.getElementById("userInput").value = "";
         };
-
-        async function query(data, url, token) {
+    
+        async function query(data, url) {
+            console.log("Querying API with data:", JSON.stringify(data));
             try {
                 const response = await fetch(url, {
                     headers: {
-                        'Authorization': `Bearer ${token}`,
+                        'Authorization': 'Bearer f39536ea-6cd4-4afe-ac99-bd9babd2cd21',
                         'Content-Type': 'application/json'
                     },
                     method: "POST",
-                    body: JSON.stringify(data),
+                    body: JSON.stringify(data)
                 });
+                
                 if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
+                    let errorDetail = 'Unknown error';
+                    try {
+                        const errorResponse = await response.json();
+                        errorDetail = errorResponse.detail || JSON.stringify(errorResponse);
+                    } catch (jsonError) {
+                        console.error('Failed to parse error response as JSON:', jsonError);
+                        errorDetail = await response.text();
+                    }
+                    throw new Error(`HTTP error! status: ${response.status}, detail: ${errorDetail}`);
                 }
+                
                 const result = await response.json();
+                console.log("API Response:", result);
                 return result;
             } catch (error) {
                 console.error("Error during API call:", error);
-                return { outputs: { 'out-0': 'Error during API call' } };
+                return { outputs: { 'out-0': `Error during API call: ${error.message}` } };
             }
         }
-
+    
         const messageContainer = document.getElementById("messageContainer");
         const userInput = document.getElementById("userInput");
-
+        const responseContainer = document.getElementById("responseContainer");
+    
         function appendMessage(message, sender) {
             const messageDiv = document.createElement("div");
             messageDiv.classList.add("message");
@@ -149,22 +171,22 @@
             // Scroll to the bottom of the container
             messageContainer.scrollTop = messageContainer.scrollHeight;
         }
-
+    
         // Define a global variable to store the conversation log
         let conversationLog = [];
-
+    
         // Function to append a message to the conversation log
         function appendToLog(message, sender) {
             conversationLog.push({ message, sender });
         }
-
+    
         async function sendMessage() {
             const userMessage = userInput.value.trim();
             if (userMessage !== "") {
                 appendMessage(userMessage, "user");
                 // Append user message to the conversation log
                 appendToLog(userMessage, "user");
-                const response = await query({"in-0": userMessage, "user_id": ""}, "https://api.stack-ai.com/inference/v0/run/ac522f2a-ccb2-4608-8bab-3e1ccf74af42/663905242c2e38e8a381736b", "f39536ea-6cd4-4afe-ac99-bd9babd2cd21");
+                const response = await query({"in-0": userMessage, "user_id": ""}, "https://api.stack-ai.com/inference/v0/run/ac522f2a-ccb2-4608-8bab-3e1ccf74af42/663905242c2e38e8a381736b");
                 console.log(response); // Log the entire response object
                 const botMessage = response?.outputs?.['out-0'] || "Sorry, I couldn't understand that.";
                 appendMessage(botMessage, "bot");
@@ -173,39 +195,44 @@
                 userInput.value = ""; // Clear the input field
             }
         }
-
+    
         async function sendConversationLog() {
-            const logMessages = conversationLog.map(entry => `${entry.sender === 'user' ? 'User' : 'Bot'}: ${entry.message}`).join('\n');
-            const firstApiResponse = await query({
-                "in-0": logMessages,
+            // Create a formatted string of the conversation log
+            const logString = conversationLog.map(entry => `${entry.sender}: ${entry.message}`).join('\n');
+            console.log("Formatted Conversation Log:", logString); // Log the formatted conversation log
+    
+            // Prepare the input for the API
+            const apiInput = {
+                "in-0": logString,
                 "user_id": "<USER or Conversation ID>"
-            }, "https://api.stack-ai.com/inference/v0/run/ac522f2a-ccb2-4608-8bab-3e1ccf74af42/663905242c2e38e8a381736b", "f39536ea-6cd4-4afe-ac99-bd9babd2cd21");
-            console.log("First API Response:", firstApiResponse); // Log the response from the first API
-
-            // Send the response from the first API to the second API
-            const secondApiResponse = await query({
-                "in-0": firstApiResponse.outputs['out-0'],
-                "user_id": "<USER or Conversation ID>"
-            }, "https://api.stack-ai.com/inference/v0/run/ac522f2a-ccb2-4608-8bab-3e1ccf74af42/663b8b5178d943c1cd118d55", "f39536ea-6cd4-4afe-ac99-bd9babd2cd21");
-            console.log("Second API Response:", secondApiResponse); // Log the response from the second API
-
-            const responseString = JSON.stringify(secondApiResponse);
-            // Redirect to the output page with the API response
-            window.location.href = `output.html?response=${encodeURIComponent(responseString)}`;
+            };
+            console.log("API Input to Scoring Model:", JSON.stringify(apiInput)); // Print the input to the scoring model
+    
+            // Call the scoring model API with the correct endpoint
+            const apiResponse = await query(apiInput, "https://api.stack-ai.com/inference/v0/run/ac522f2a-ccb2-4608-8bab-3e1ccf74af42/663b8b5178d943c1cd118d55");
+            console.log("Scoring Model API Response:", apiResponse); // Log the response from the API
+    
+            // Display the API response in the response container
+            displayResponse(apiResponse.outputs['out-0']);
         }
-
+    
+        function displayResponse(response) {
+            responseContainer.innerHTML = response.replace(/\n/g, '<br>');
+        }
+    
         // Focus on the input field when the page loads
         userInput.focus();
-
+    
         // Handle Enter key press
         userInput.addEventListener("keypress", function(event) {
             if (event.key === "Enter") {
                 sendMessage();
             }
         });
-
+    
         // Display welcome message from the bot on page load
         appendMessage("Welcome to Charlotte! My name is AI Bot and I am an assistant built to help you find your perfect neighborhood in Charlotte and answer any questions you may have. To get started let me know what you are looking for in a neighborhood?", "bot");
     </script>
+    
 </body>
 </html>
