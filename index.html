@@ -114,9 +114,15 @@
     </div>
 
     <script>
+        let userId;
+
         window.onload = function() {
             resetConversation();
         };
+
+        function generateUserId() {
+            return 'user_' + Math.random().toString(36).substr(2, 9);
+        }
     
         async function query(data, url) {
             console.log("Querying API with data:", JSON.stringify(data));
@@ -186,7 +192,7 @@
                 appendMessage(userMessage, "user");
                 // Append user message to the conversation log
                 appendToLog(userMessage, "user");
-                const response = await query({"in-0": userMessage, "user_id": ""}, "https://api.stack-ai.com/inference/v0/run/ac522f2a-ccb2-4608-8bab-3e1ccf74af42/663905242c2e38e8a381736b");
+                const response = await query({"in-0": userMessage, "user_id": userId}, "https://api.stack-ai.com/inference/v0/run/ac522f2a-ccb2-4608-8bab-3e1ccf74af42/663905242c2e38e8a381736b");
                 console.log(response); // Log the entire response object
                 const botMessage = response?.outputs?.['out-0'] || "Sorry, I couldn't understand that.";
                 appendMessage(botMessage, "bot");
@@ -204,7 +210,7 @@
             // Prepare the input for the API
             const apiInput = {
                 "in-0": logString,
-                "user_id": "<USER or Conversation ID>"
+                "user_id": userId
             };
             console.log("API Input to Scoring Model:", JSON.stringify(apiInput)); // Print the input to the scoring model
     
@@ -224,6 +230,7 @@
             conversationLog = [];
             messageContainer.innerHTML = '';
             responseContainer.innerHTML = '';
+            userId = generateUserId(); // Generate a new user ID for each session
             startNewSession();
         }
 
