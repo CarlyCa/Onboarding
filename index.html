@@ -76,6 +76,31 @@
             left: auto;
             right: -2px;
         }
+        .typing-indicator {
+            display: flex;
+            align-items: center;
+            margin: 10px 0;
+            color: #fff;
+        }
+        .typing-indicator div {
+            width: 8px;
+            height: 8px;
+            background-color: #fff;
+            border-radius: 50%;
+            margin: 0 2px;
+            animation: typing 1s infinite;
+        }
+        @keyframes typing {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.5); }
+            100% { transform: scale(1); }
+        }
+        .typing-indicator div:nth-child(2) {
+            animation-delay: 0.1s;
+        }
+        .typing-indicator div:nth-child(3) {
+            animation-delay: 0.2s;
+        }
         input[type="text"], input[type="button"] {
             width: calc(100% - 20px);
             padding: 10px;
@@ -123,9 +148,10 @@
         function generateUserId() {
             return 'user_' + Math.random().toString(36).substr(2, 9);
         }
-    
+
         async function query(data, url) {
             console.log("Querying API with data:", JSON.stringify(data));
+            showTypingIndicator();
             try {
                 const response = await fetch(url, {
                     headers: {
@@ -154,6 +180,8 @@
             } catch (error) {
                 console.error("Error during API call:", error);
                 return { outputs: { 'out-0': `Error during API call: ${error.message}` } };
+            } finally {
+                hideTypingIndicator();
             }
         }
     
@@ -192,13 +220,13 @@
                 appendMessage(userMessage, "user");
                 // Append user message to the conversation log
                 appendToLog(userMessage, "user");
+                userInput.value = ""; // Clear the input field
                 const response = await query({"in-0": userMessage, "user_id": userId}, "https://api.stack-ai.com/inference/v0/run/ac522f2a-ccb2-4608-8bab-3e1ccf74af42/663905242c2e38e8a381736b");
                 console.log(response); // Log the entire response object
                 const botMessage = response?.outputs?.['out-0'] || "Sorry, I couldn't understand that.";
                 appendMessage(botMessage, "bot");
                 // Append bot message to the conversation log
                 appendToLog(botMessage, "bot");
-                userInput.value = ""; // Clear the input field
             }
         }
     
@@ -237,6 +265,29 @@
 
         function startNewSession() {
             appendMessage("Welcome to Charlotte! My name is AI Bot and I am an assistant built to help you find your perfect neighborhood in Charlotte and answer any questions you may have. To get started let me know what you are looking for in a neighborhood?", "bot");
+        }
+
+        function showTypingIndicator() {
+            const typingIndicator = document.createElement("div");
+            typingIndicator.classList.add("message", "bot");
+            typingIndicator.id = "typingIndicator";
+            typingIndicator.innerHTML = `
+                <div class="avatar"></div>
+                <div class="typing-indicator">
+                    <div></div>
+                    <div></div>
+                    <div></div>
+                </div>
+            `;
+            messageContainer.appendChild(typingIndicator);
+            messageContainer.scrollTop = messageContainer.scrollHeight;
+        }
+
+        function hideTypingIndicator() {
+            const typingIndicator = document.getElementById("typingIndicator");
+            if (typingIndicator) {
+                typingIndicator.remove();
+            }
         }
     
         // Focus on the input field when the page loads
