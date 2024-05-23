@@ -115,7 +115,7 @@
 
     <script>
         window.onload = function() {
-            document.getElementById("userInput").value = "";
+            resetConversation();
         };
     
         async function query(data, url) {
@@ -219,6 +219,17 @@
         function displayResponse(response) {
             responseContainer.innerHTML = response.replace(/\n/g, '<br>');
         }
+
+        function resetConversation() {
+            conversationLog = [];
+            messageContainer.innerHTML = '';
+            responseContainer.innerHTML = '';
+            startNewSession();
+        }
+
+        function startNewSession() {
+            appendMessage("Welcome to Charlotte! My name is AI Bot and I am an assistant built to help you find your perfect neighborhood in Charlotte and answer any questions you may have. To get started let me know what you are looking for in a neighborhood?", "bot");
+        }
     
         // Focus on the input field when the page loads
         userInput.focus();
@@ -229,9 +240,6 @@
                 sendMessage();
             }
         });
-    
-        // Display welcome message from the bot on page load
-        appendMessage("Welcome to Charlotte! My name is AI Bot and I am an assistant built to help you find your perfect neighborhood in Charlotte and answer any questions you may have. To get started let me know what you are looking for in a neighborhood?", "bot");
     </script>
     
 </body>
