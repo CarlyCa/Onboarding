@@ -115,6 +115,14 @@
             border: none;
             cursor: pointer;
         }
+        #findMatchButton {
+            opacity: 0.5;
+            pointer-events: none;
+        }
+        #findMatchButton.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
         input[type="button"]:hover {
             background-color: #33a8a0;
         }
@@ -126,6 +134,30 @@
             color: #fff;
             line-height: 1.6;
         }
+        .links-container {
+            margin-top: 20px;
+            padding: 20px;
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            color: #fff;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .links-container button {
+            background-color: #33a8a0;
+            color: #fff;
+            border: none;
+            padding: 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            flex: 1 1 calc(33.333% - 20px);
+            box-sizing: border-box;
+        }
+        .links-container button:hover {
+            background-color: #7b32a8;
+        }
     </style>
 </head>
 <body>
@@ -134,12 +166,28 @@
         <div class="message-container" id="messageContainer"></div>
         <input type="text" id="userInput" placeholder="Type your message...">
         <input type="button" value="Send Message" onclick="sendMessage()">
-        <input type="button" value="I'm Ready to Find My Neighborhood Match" onclick="sendConversationLog()">
+        <input type="button" id="findMatchButton" value="I'm Ready to Find My Neighborhood Match" onclick="sendConversationLog()">
         <div class="response-container" id="responseContainer"></div>
+        <div class="links-container">
+            <button onclick="window.open('https://charlottenc.gov/', '_blank')">City of Charlotte</button>
+            <button onclick="window.open('https://charlotteregion.com/', '_blank')">Charlotte Chamber</button>
+            <button onclick="window.open('https://www.charlottesgotalot.com/', '_blank')">Visit Charlotte</button>
+            <button onclick="window.open('https://www.neighborhoodscout.com/nc/charlotte', '_blank')">Charlotte Neighborhoods</button>
+            <button onclick="window.open('https://charlotte.axios.com/', '_blank')">Charlotte Agenda</button>
+            <button onclick="window.open('https://www.charlottemagazine.com/', '_blank')">Charlotte Magazine</button>
+            <button onclick="window.open('https://www.zillow.com/charlotte-nc/', '_blank')">Zillow Charlotte</button>
+            <button onclick="window.open('https://www.realtor.com/realestateandhomes-search/Charlotte_NC', '_blank')">Realtor.com Charlotte</button>
+            <button onclick="window.open('https://www.redfin.com/city/3084/NC/Charlotte', '_blank')">Redfin Charlotte</button>
+            <button onclick="window.open('https://www.trulia.com/NC/Charlotte/', '_blank')">Trulia Charlotte</button>
+            <button onclick="window.open('https://www.coldwellbankerhomes.com/nc/charlotte/', '_blank')">Coldwell Banker Charlotte</button>
+            <button onclick="window.open('https://www.allentate.com/', '_blank')">Allen Tate Realtors</button>
+        </div>
     </div>
 
     <script>
         let userId;
+        let messageCount = 0;
+        const messageThreshold = 10;
 
         window.onload = function() {
             resetConversation();
@@ -188,6 +236,7 @@
         const messageContainer = document.getElementById("messageContainer");
         const userInput = document.getElementById("userInput");
         const responseContainer = document.getElementById("responseContainer");
+        const findMatchButton = document.getElementById("findMatchButton");
     
         function appendMessage(message, sender) {
             const messageDiv = document.createElement("div");
@@ -204,6 +253,10 @@
             messageContainer.appendChild(messageDiv);
             // Scroll to the bottom of the container
             messageContainer.scrollTop = messageContainer.scrollHeight;
+            
+            // Increment message count and update button color
+            messageCount++;
+            updateButtonColor();
         }
     
         // Define a global variable to store the conversation log
@@ -258,13 +311,16 @@
             conversationLog = [];
             messageContainer.innerHTML = '';
             responseContainer.innerHTML = '';
+            messageCount = 0;
             userId = generateUserId(); // Generate a new user ID for each session
             console.log("New session started with User ID:", userId); // Log the new user ID
             startNewSession();
+            findMatchButton.classList.remove("active");
+            findMatchButton.style.background = `linear-gradient(to right, #7b32a8 0%, #7b32a8 0%)`;
         }
 
         function startNewSession() {
-            appendMessage("Welcome to Charlotte! My name is AI Bot and I am an assistant built to help you find your perfect neighborhood in Charlotte and answer any questions you may have. To get started let me know what you are looking for in a neighborhood?", "bot");
+            appendMessage("Welcome to Charlotte! I'm Hex, your personal assistant dedicated to helping you find the perfect neighborhood here. I'll ask you a few questions to understand your preferences better. Once the button turns green, or when you feel I've gathered enough information, click it, and I'll recommend the top three neighborhoods suited for you. Let's get started! What are you looking for in a neighborhood?", "bot");
         }
 
         function showTypingIndicator() {
@@ -289,6 +345,14 @@
                 typingIndicator.remove();
             }
         }
+
+        function updateButtonColor() {
+            const percentage = (messageCount / messageThreshold) * 100;
+            findMatchButton.style.background = `linear-gradient(to right, #33a8a0 ${percentage}%, #7b32a8 ${percentage}%)`;
+            if (messageCount >= messageThreshold) {
+                findMatchButton.classList.add("active");
+            }
+        }
     
         // Focus on the input field when the page loads
         userInput.focus();
@@ -303,4 +367,3 @@
     
 </body>
 </html>
-
